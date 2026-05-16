@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FitTracker Pro</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22FitTracker%20Pro%22%2C%22display%22%3A%22standalone%22%7D">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0f;color:#f1f5f9;font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+h1,h2,h3,.font-display{font-family:'Barlow Condensed',sans-serif;letter-spacing:0.02em}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#111827}
+::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+input,select,textarea{background:#1f2937;border:1px solid #374151;border-radius:8px;color:#f1f5f9;font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 14px;width:100%;outline:none;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.15)}
+input::placeholder,textarea::placeholder{color:#6b7280}
+select option{background:#1f2937}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ringFill{from{stroke-dashoffset:var(--full)}to{stroke-dashoffset:var(--current)}}
+.slide-up{animation:slideUp .25s ease forwards}
+.fade-in{animation:fadeIn .2s ease forwards}
+.btn{border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:10px 18px;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:#3b82f6;color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-danger{background:#ef4444;color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-success{background:#22c55e;color:#fff}
+.btn-success:hover{background:#16a34a}
+.btn-ghost{background:transparent;color:#9ca3af;border:1px solid #374151}
+.btn-ghost:hover{background:#1f2937;color:#f1f5f9}
+.btn-sm{padding:6px 12px;font-size:13px;border-radius:6px}
+.btn-icon{padding:8px;border-radius:6px;background:transparent;border:1px solid #374151;color:#9ca3af;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+.btn-icon:hover{background:#1f2937;color:#f1f5f9}
+.card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px}
+.badge{border-radius:6px;font-size:12px;font-weight:500;padding:3px 9px;display:inline-block}
+.badge-blue{background:rgba(59,130,246,0.15);color:#60a5fa}
+.badge-green{background:rgba(34,197,94,0.15);color:#4ade80}
+.badge-amber{background:rgba(245,158,11,0.15);color:#fbbf24}
+.badge-purple{background:rgba(139,92,246,0.15);color:#a78bfa}
+.badge-red{background:rgba(239,68,68,0.15);color:#f87171}
+.sidebar{background:#0f172a;border-right:1px solid #1f2937;width:220px;min-height:100vh;display:flex;flex-direction:column}
+.sidebar-link{align-items:center;border-radius:8px;color:#9ca3af;cursor:pointer;display:flex;gap:10px;font-size:14px;font-weight:500;margin:2px 8px;padding:10px 12px;transition:all .15s}
+.sidebar-link:hover{background:#1f2937;color:#f1f5f9}
+.sidebar-link.active{background:rgba(59,130,246,0.15);color:#60a5fa}
+.stat-card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:16px 20px}
+.exercise-card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:16px;transition:border-color .2s;cursor:pointer}
+.exercise-card:hover{border-color:#374151}
+.exercise-card.done{border-color:#22c55e;background:rgba(34,197,94,0.05)}
+.toast{align-items:center;border-radius:10px;bottom:24px;box-shadow:0 10px 40px rgba(0,0,0,0.4);color:#fff;display:flex;font-size:14px;font-weight:500;gap:10px;left:50%;max-width:360px;padding:14px 18px;position:fixed;transform:translateX(-50%);z-index:1000;animation:slideUp .3s ease}
+.modal-overlay{background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);bottom:0;display:flex;align-items:center;justify-content:center;left:0;position:fixed;right:0;top:0;z-index:999;padding:16px}
+.modal{background:#111827;border:1px solid #1f2937;border-radius:14px;max-height:90vh;overflow-y:auto;width:100%;max-width:480px;animation:slideUp .25s ease}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid #1f2937}
+table{border-collapse:collapse;width:100%}
+th{background:#0f172a;color:#6b7280;font-size:12px;font-weight:500;letter-spacing:0.05em;padding:12px 16px;text-align:left;text-transform:uppercase}
+td{border-top:1px solid #1f2937;color:#d1d5db;font-size:14px;padding:12px 16px}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.ring-timer{transform:rotate(-90deg);transform-origin:center}
+.bottom-nav{background:#111827;border-top:1px solid #1f2937;bottom:0;display:flex;left:0;position:fixed;right:0;z-index:100}
+.bottom-nav-item{align-items:center;color:#6b7280;cursor:pointer;display:flex;flex:1;flex-direction:column;font-size:11px;font-weight:500;gap:4px;padding:10px 0;transition:color .15s}
+.bottom-nav-item.active{color:#3b82f6}
+.bottom-nav-item svg{width:22px;height:22px;stroke-width:2}
+.search-input{background:#1f2937;border:1px solid #374151;border-radius:8px;color:#f1f5f9;font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 14px 9px 38px;outline:none;transition:border-color .2s;width:100%}
+.search-input:focus{border-color:#3b82f6}
+.search-wrap{position:relative}
+.search-icon{left:12px;position:absolute;top:50%;transform:translateY(-50%);color:#6b7280;pointer-events:none}
+@media(max-width:768px){.sidebar{display:none}.desktop-only{display:none}}
+@media(min-width:769px){.bottom-nav{display:none}.mobile-only{display:none}}
+</style>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#6b7280;font-size:14px">Caricamento FitTracker Pro...</div></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+const STORAGE_KEY = 'fittracker-pro-v1';
+const ADMIN_PASS = 'admin123';
+const DAY_NAMES = {1:'Lunedì',2:'Martedì',3:'Mercoledì',4:'Giovedì',5:'Venerdì',6:'Sabato',7:'Domenica'};
+const MG_COLORS = {1:'badge-blue',2:'badge-green',3:'badge-amber',4:'badge-purple',5:'badge-red',6:'badge-green',7:'badge-amber',8:'badge-blue'};
+const GOALS = ['Ipertrofia','Dimagrimento','Forza','Resistenza','Tonificazione','Mantenimento'];
+
+const SEED = {
+  persons:[
+    {id:1,name:'Marco',surname:'Rossi',age:28,weight:75,height:178,goal:'Ipertrofia',phone:'333-1234567',email:'marco@example.com'},
+    {id:2,name:'Giulia',surname:'Ferrari',age:25,weight:60,height:165,goal:'Dimagrimento',phone:'333-7654321',email:'giulia@example.com'},
+    {id:3,name:'Luca',surname:'Bianchi',age:32,weight:85,height:182,goal:'Forza',phone:'333-9876543',email:'luca@example.com'},
+  ],
+  muscleGroups:[
+    {id:1,name:'Petto'},{id:2,name:'Schiena'},{id:3,name:'Spalle'},
+    {id:4,name:'Bicipiti'},{id:5,name:'Tricipiti'},{id:6,name:'Gambe'},
+    {id:7,name:'Addome'},{id:8,name:'Cardio'},
+  ],
+  exercises:[
+    {id:1,mgId:1,name:'Panca Piana',sets:4,reps:'8-10',rest:90,notes:'Controllo nella discesa'},
+    {id:2,mgId:1,name:'Panca Inclinata',sets:3,reps:'10-12',rest:75,notes:''},
+    {id:3,mgId:1,name:'Croci con Manubri',sets:3,reps:'12-15',rest:60,notes:'Allungamento completo'},
+    {id:4,mgId:1,name:'Dip alle Parallele',sets:3,reps:'8-12',rest:90,notes:''},
+    {id:5,mgId:2,name:'Stacchi da Terra',sets:4,reps:'5-6',rest:120,notes:'Schiena dritta'},
+    {id:6,mgId:2,name:'Trazioni alla Sbarra',sets:4,reps:'6-10',rest:90,notes:''},
+    {id:7,mgId:2,name:'Rematore Bilanciere',sets:3,reps:'8-10',rest:90,notes:''},
+    {id:8,mgId:2,name:'Lat Machine',sets:3,reps:'10-12',rest:75,notes:''},
+    {id:9,mgId:3,name:'Military Press',sets:4,reps:'8-10',rest:90,notes:''},
+    {id:10,mgId:3,name:'Alzate Laterali',sets:3,reps:'12-15',rest:60,notes:'Gomiti flessi'},
+    {id:11,mgId:3,name:'Arnold Press',sets:3,reps:'10-12',rest:75,notes:''},
+    {id:12,mgId:4,name:'Curl Bilanciere',sets:3,reps:'10-12',rest:75,notes:''},
+    {id:13,mgId:4,name:'Curl Manubri Alternati',sets:3,reps:'12',rest:60,notes:''},
+    {id:14,mgId:4,name:'Curl a Martello',sets:3,reps:'12',rest:60,notes:''},
+    {id:15,mgId:5,name:'French Press',sets:3,reps:'10-12',rest:75,notes:''},
+    {id:16,mgId:5,name:'Push Down al Cavo',sets:3,reps:'12-15',rest:60,notes:''},
+    {id:17,mgId:5,name:'Skull Crushers',sets:3,reps:'10-12',rest:75,notes:''},
+    {id:18,mgId:6,name:'Squat',sets:4,reps:'8-10',rest:120,notes:'Ginocchia sopra punte'},
+    {id:19,mgId:6,name:'Leg Press',sets:3,reps:'10-12',rest:90,notes:''},
+    {id:20,mgId:6,name:'Affondi',sets:3,reps:'12/gamba',rest:75,notes:''},
+    {id:21,mgId:6,name:'Leg Curl',sets:3,reps:'12-15',rest:60,notes:''},
+    {id:22,mgId:6,name:'Calf Raise',sets:4,reps:'15-20',rest:45,notes:''},
+    {id:23,mgId:7,name:'Crunch',sets:3,reps:'20',rest:45,notes:''},
+    {id:24,mgId:7,name:'Plank',sets:3,reps:'60 sec',rest:45,notes:''},
+    {id:25,mgId:7,name:'Russian Twist',sets:3,reps:'20',rest:45,notes:''},
+    {id:26,mgId:8,name:'Tapis Roulant',sets:1,reps:'30 min',rest:0,notes:'Ritmo moderato'},
+    {id:27,mgId:8,name:'Cyclette',sets:1,reps:'20 min',rest:0,notes:''},
+    {id:28,mgId:8,name:'Salto con la Corda',sets:5,reps:'2 min',rest:60,notes:''},
+  ],
+  plans:[
+    {id:1,personId:1,name:'Push/Pull/Legs - Marco',startDate:'2024-01-01',endDate:'2024-03-31',notes:'Ciclo ipertrofia 3 mesi'},
+    {id:2,personId:2,name:'Full Body - Giulia',startDate:'2024-01-15',endDate:'2024-04-15',notes:'3x settimana'},
+    {id:3,personId:3,name:'Powerlifting - Luca',startDate:'2024-02-01',endDate:'2024-05-01',notes:'Forza massimale'},
+  ],
+  assignments:[
+    {id:1,personId:1,planId:1,day:1,exerciseId:1},{id:2,personId:1,planId:1,day:1,exerciseId:2},
+    {id:3,personId:1,planId:1,day:1,exerciseId:3},{id:4,personId:1,planId:1,day:1,exerciseId:9},
+    {id:5,personId:1,planId:1,day:1,exerciseId:15},{id:6,personId:1,planId:1,day:2,exerciseId:5},
+    {id:7,personId:1,planId:1,day:2,exerciseId:6},{id:8,personId:1,planId:1,day:2,exerciseId:7},
+    {id:9,personId:1,planId:1,day:2,exerciseId:12},{id:10,personId:1,planId:1,day:2,exerciseId:13},
+    {id:11,personId:1,planId:1,day:3,exerciseId:18},{id:12,personId:1,planId:1,day:3,exerciseId:19},
+    {id:13,personId:1,planId:1,day:3,exerciseId:20},{id:14,personId:1,planId:1,day:3,exerciseId:21},
+    {id:15,personId:1,planId:1,day:3,exerciseId:22},
+    {id:16,personId:2,planId:2,day:1,exerciseId:1},{id:17,personId:2,planId:2,day:1,exerciseId:8},
+    {id:18,personId:2,planId:2,day:1,exerciseId:18},{id:19,personId:2,planId:2,day:1,exerciseId:12},
+    {id:20,personId:2,planId:2,day:1,exerciseId:23},{id:21,personId:2,planId:2,day:1,exerciseId:26},
+    {id:22,personId:2,planId:2,day:2,exerciseId:2},{id:23,personId:2,planId:2,day:2,exerciseId:6},
+    {id:24,personId:2,planId:2,day:2,exerciseId:19},{id:25,personId:2,planId:2,day:2,exerciseId:14},
+    {id:26,personId:2,planId:2,day:2,exerciseId:24},{id:27,personId:2,planId:2,day:2,exerciseId:27},
+    {id:28,personId:3,planId:3,day:1,exerciseId:1},{id:29,personId:3,planId:3,day:1,exerciseId:15},
+    {id:30,personId:3,planId:3,day:2,exerciseId:5},{id:31,personId:3,planId:3,day:2,exerciseId:7},
+    {id:32,personId:3,planId:3,day:3,exerciseId:18},{id:33,personId:3,planId:3,day:3,exerciseId:21},
+  ],
+  completed:[],
+  nextIds:{person:4,plan:4,exercise:29,assignment:34,workout:1}
+};
+
+// ─── STORAGE ────────────────────────────────────────────────
+const db = {
+  load(){ try{const d=localStorage.getItem(STORAGE_KEY);return d?JSON.parse(d):null}catch{return null} },
+  save(data){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}catch{} }
+};
+
+// ─── TINY HOOKS ──────────────────────────────────────────────
+function useToast(){
+  const [toast,setToast]=useState(null);
+  const show=useCallback((msg,type='success')=>{
+    setToast({msg,type});
+    setTimeout(()=>setToast(null),3000);
+  },[]);
+  return [toast,show];
+}
+
+// ─── UI PRIMITIVES ───────────────────────────────────────────
+function Toast({toast}){
+  if(!toast) return null;
+  const colors={success:'#22c55e',error:'#ef4444',info:'#3b82f6',warning:'#f59e0b'};
+  return <div className="toast" style={{background:colors[toast.type]||colors.success}}>
+    {toast.type==='success'&&<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>}
+    {toast.type==='error'&&<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>}
+    {toast.msg}
+  </div>;
+}
+
+function Modal({title,onClose,children,wide}){
+  return <div className="modal-overlay fade-in" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal" style={{maxWidth:wide?640:480}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 20px 0'}}>
+        <h3 style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700}}>{title}</h3>
+        <button className="btn-icon" onClick={onClose}>
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div style={{padding:'16px 20px 20px'}}>{children}</div>
+    </div>
+  </div>;
+}
+
+function FormField({label,children}){
+  return <div style={{marginBottom:14}}>
+    <label style={{display:'block',color:'#9ca3af',fontSize:12,fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</label>
+    {children}
+  </div>;
+}
+
+function SvgIcon({d,size=20}){
+  return <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d={d}/></svg>;
+}
+
+const ICONS={
+  users:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  dumbbell:'M6.5 6.5h11M6.5 17.5h11M3 9v6M21 9v6M7 3v18M17 3v18',
+  calendar:'M8 2v4M16 2v4M3 10h18M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  plus:'M12 5v14M5 12h14',
+  edit:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z',
+  trash:'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+  home:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+  chart:'M18 20V10M12 20V4M6 20v-6',
+  download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',
+  upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+  check:'M20 6L9 17l-5-5',
+  timer:'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 6v6l4 2',
+  muscle:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z',
+  logout:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+  excel:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h2M14 13h2M8 17h2M14 17h2M11 13v4',
+  settings:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
+  layers:'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+};
+
+// ─── REST TIMER ─────────────────────────────────────────────
+function RestTimer({seconds,onClose}){
+  const [remaining,setRemaining]=useState(seconds);
+  const [paused,setPaused]=useState(false);
+  const ref=useRef(null);
+  const total=seconds;
+  const radius=60;
+  const circ=2*Math.PI*radius;
+  const prog=circ*(1-remaining/total);
+
+  useEffect(()=>{
+    if(paused||remaining<=0) return;
+    ref.current=setInterval(()=>setRemaining(r=>r>0?r-1:0),1000);
+    return ()=>clearInterval(ref.current);
+  },[paused,remaining]);
+
+  useEffect(()=>{
+    if(remaining===0){
+      clearInterval(ref.current);
+      try{
+        const ctx=new (window.AudioContext||window.webkitAudioContext)();
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(880,ctx.currentTime);
+        gain.gain.setValueAtTime(0.3,ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.8);
+        osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.8);
+      }catch{}
+    }
+  },[remaining]);
+
+  const mm=String(Math.floor(remaining/60)).padStart(2,'0');
+  const ss=String(remaining%60).padStart(2,'0');
+  const pct=Math.round(((total-remaining)/total)*100);
+
+  return <div className="modal-overlay fade-in">
+    <div style={{background:'#111827',border:'1px solid #1f2937',borderRadius:20,padding:40,textAlign:'center',width:300,animation:'slideUp .25s ease'}}>
+      <p style={{color:'#9ca3af',fontSize:12,fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:24}}>Recupero</p>
+      <div style={{position:'relative',display:'inline-block',marginBottom:28}}>
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r={radius} fill="none" stroke="#1f2937" strokeWidth="8"/>
+          <circle cx="80" cy="80" r={radius} fill="none"
+            stroke={remaining===0?'#22c55e':'#3b82f6'} strokeWidth="8"
+            strokeLinecap="round" strokeDasharray={circ}
+            strokeDashoffset={circ-prog}
+            style={{transform:'rotate(-90deg)',transformOrigin:'80px 80px',transition:'stroke-dashoffset 1s linear,stroke .3s'}}/>
+        </svg>
+        <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',textAlign:'center'}}>
+          <div style={{fontFamily:'Barlow Condensed',fontSize:48,fontWeight:700,color:remaining===0?'#22c55e':'#f1f5f9',lineHeight:1}}>
+            {remaining===0?'✓':`${mm}:${ss}`}
+          </div>
+          {remaining>0&&<div style={{color:'#6b7280',fontSize:13,marginTop:4}}>{pct}%</div>}
+        </div>
+      </div>
+      {remaining===0
+        ? <p style={{color:'#4ade80',fontSize:15,fontWeight:500,marginBottom:20}}>Recupero completato!</p>
+        : null
+      }
+      <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+        {remaining>0&&<button className="btn btn-ghost" onClick={()=>setPaused(p=>!p)}>
+          {paused
+            ? <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            : <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          }
+          {paused?'Riprendi':'Pausa'}
+        </button>}
+        <button className="btn btn-ghost" onClick={()=>{setRemaining(total);setPaused(false);}}>
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 4v6h6M3.51 15a9 9 0 1 0 .49-4.04"/></svg>
+          Reset
+        </button>
+        <button className="btn btn-primary" onClick={onClose}>
+          {remaining===0?'Continua':'Salta'}
+        </button>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── LOGIN ──────────────────────────────────────────────────
+function LoginPage({persons,onUser,onAdmin}){
+  const [showAdmin,setShowAdmin]=useState(false);
+  const [pass,setPass]=useState('');
+  const [err,setErr]=useState('');
+  const [showPass,setShowPass]=useState(false);
+
+  function handleAdmin(e){
+    e.preventDefault();
+    if(pass===ADMIN_PASS) onAdmin();
+    else setErr('Password errata');
+  }
+
+  return <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,background:'linear-gradient(135deg,#0a0a0f 0%,#0f172a 100%)'}}>
+    <div style={{marginBottom:48,textAlign:'center'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:12,marginBottom:12}}>
+        <div style={{background:'#3b82f6',borderRadius:14,padding:'10px',display:'flex'}}>
+          <svg width="28" height="28" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path d="M6.5 6.5h11M6.5 17.5h11M3 9v6M21 9v6M7 3v18M17 3v18"/>
+          </svg>
+        </div>
+        <h1 style={{fontFamily:'Barlow Condensed',fontSize:42,fontWeight:800,color:'#f1f5f9',letterSpacing:'0.02em'}}>
+          FitTracker<span style={{color:'#3b82f6'}}>Pro</span>
+        </h1>
+      </div>
+      <p style={{color:'#6b7280',fontSize:15}}>Gestione schede allenamento professionale</p>
+    </div>
+
+    {!showAdmin ? <>
+      <div style={{width:'100%',maxWidth:420}}>
+        <p style={{color:'#9ca3af',fontSize:13,fontWeight:500,letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:16,textAlign:'center'}}>Seleziona il tuo profilo</p>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {persons.map(p=>(
+            <button key={p.id} onClick={()=>onUser(p)}
+              style={{background:'#111827',border:'1px solid #1f2937',borderRadius:12,padding:'16px 20px',cursor:'pointer',display:'flex',alignItems:'center',gap:16,transition:'all .2s',textAlign:'left'}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.background='#131f35'}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='#1f2937';e.currentTarget.style.background='#111827'}}>
+              <div style={{width:46,height:46,borderRadius:'50%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,color:'#60a5fa',flexShrink:0}}>
+                {p.name[0]}{p.surname[0]}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{color:'#f1f5f9',fontSize:16,fontWeight:600}}>{p.name} {p.surname}</div>
+                <div style={{color:'#6b7280',fontSize:13,marginTop:2}}>
+                  <span className="badge badge-blue" style={{fontSize:11}}>{p.goal}</span>
+                  <span style={{marginLeft:8}}>{p.age} anni · {p.weight} kg</span>
+                </div>
+              </div>
+              <svg width="18" height="18" fill="none" stroke="#4b5563" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          ))}
+        </div>
+        <div style={{textAlign:'center',marginTop:24}}>
+          <button className="btn btn-ghost btn-sm" onClick={()=>setShowAdmin(true)}>
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d={ICONS.settings}/></svg>
+            Accesso Admin
+          </button>
+        </div>
+      </div>
+    </> : <>
+      <div style={{width:'100%',maxWidth:360,background:'#111827',border:'1px solid #1f2937',borderRadius:14,padding:28}}>
+        <h2 style={{fontFamily:'Barlow Condensed',fontSize:26,fontWeight:700,marginBottom:6}}>Pannello Admin</h2>
+        <p style={{color:'#6b7280',fontSize:13,marginBottom:24}}>Password: <code style={{color:'#60a5fa'}}>admin123</code></p>
+        <form onSubmit={handleAdmin}>
+          <FormField label="Password">
+            <div style={{position:'relative'}}>
+              <input type={showPass?'text':'password'} value={pass} onChange={e=>setPass(e.target.value)}
+                placeholder="Inserisci password" autoFocus/>
+              <button type="button" onClick={()=>setShowPass(s=>!s)}
+                style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:'#6b7280',cursor:'pointer',padding:0}}>
+                {showPass?'👁️':'🔒'}
+              </button>
+            </div>
+          </FormField>
+          {err&&<p style={{color:'#ef4444',fontSize:13,marginBottom:12}}>{err}</p>}
+          <div style={{display:'flex',gap:10}}>
+            <button type="button" className="btn btn-ghost" style={{flex:1}} onClick={()=>{setShowAdmin(false);setPass('');setErr('');}}>Indietro</button>
+            <button type="submit" className="btn btn-primary" style={{flex:1}}>Accedi</button>
+          </div>
+        </form>
+      </div>
+    </>}
+  </div>;
+}
+
+// ─── ADMIN OVERVIEW ─────────────────────────────────────────
+function AdminOverview({data}){
+  const totalEx=data.exercises.length;
+  const totalPlans=data.plans.length;
+  const totalAssign=data.assignments.length;
+  const done=data.completed.length;
+  const stats=[
+    {label:'Persone',value:data.persons.length,color:'#3b82f6',icon:ICONS.users},
+    {label:'Schede',value:totalPlans,color:'#8b5cf6',icon:ICONS.layers},
+    {label:'Esercizi',value:totalEx,color:'#f59e0b',icon:ICONS.dumbbell},
+    {label:'Allenamenti Completati',value:done,color:'#22c55e',icon:ICONS.check},
+  ];
+  return <div className="slide-up">
+    <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:700,marginBottom:24}}>Dashboard</h2>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16,marginBottom:32}}>
+      {stats.map(s=>(
+        <div key={s.label} className="stat-card">
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <span style={{color:'#6b7280',fontSize:13,fontWeight:500}}>{s.label}</span>
+            <div style={{background:`${s.color}22`,borderRadius:8,padding:8}}>
+              <svg width="18" height="18" fill="none" stroke={s.color} strokeWidth="2" viewBox="0 0 24 24"><path d={s.icon}/></svg>
+            </div>
+          </div>
+          <div style={{fontFamily:'Barlow Condensed',fontSize:36,fontWeight:700,color:'#f1f5f9'}}>{s.value}</div>
+        </div>
+      ))}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16}}>
+      <div className="card">
+        <h3 style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,marginBottom:16}}>Persone Recenti</h3>
+        {data.persons.slice(0,5).map(p=>(
+          <div key={p.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderTop:'1px solid #1f2937'}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center',color:'#60a5fa',fontSize:13,fontWeight:700,flexShrink:0}}>
+              {p.name[0]}{p.surname[0]}
+            </div>
+            <div>
+              <div style={{color:'#f1f5f9',fontSize:14,fontWeight:500}}>{p.name} {p.surname}</div>
+              <div style={{color:'#6b7280',fontSize:12}}>{p.goal}</div>
+            </div>
+            <span className={`badge badge-blue`} style={{marginLeft:'auto',fontSize:11}}>
+              {data.plans.filter(pl=>pl.personId===p.id).length} schede
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <h3 style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,marginBottom:16}}>Gruppi Muscolari</h3>
+        {data.muscleGroups.map(mg=>{
+          const count=data.exercises.filter(e=>e.mgId===mg.id).length;
+          return <div key={mg.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderTop:'1px solid #1f2937'}}>
+            <span className={`badge ${MG_COLORS[mg.id]||'badge-blue'}`} style={{minWidth:80,textAlign:'center'}}>{mg.name}</span>
+            <div style={{flex:1,background:'#1f2937',borderRadius:4,height:6,overflow:'hidden'}}>
+              <div style={{width:`${(count/6)*100}%`,height:'100%',background:'#3b82f6',borderRadius:4}}/>
+            </div>
+            <span style={{color:'#6b7280',fontSize:13,minWidth:20}}>{count}</span>
+          </div>;
+        })}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── ADMIN PERSONS ───────────────────────────────────────────
+function AdminPersons({data,setData,showToast}){
+  const [modal,setModal]=useState(null);
+  const [search,setSearch]=useState('');
+  const [form,setForm]=useState({name:'',surname:'',age:'',weight:'',height:'',goal:'Ipertrofia',phone:'',email:''});
+
+  const filtered=data.persons.filter(p=>
+    `${p.name} ${p.surname} ${p.email}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  function openAdd(){setForm({name:'',surname:'',age:'',weight:'',height:'',goal:'Ipertrofia',phone:'',email:''});setModal('add');}
+  function openEdit(p){setForm({...p,age:String(p.age),weight:String(p.weight),height:String(p.height)});setModal(p.id);}
+
+  function save(){
+    if(!form.name||!form.surname){showToast('Nome e cognome obbligatori','error');return;}
+    const next={...data};
+    if(modal==='add'){
+      next.persons=[...next.persons,{...form,id:next.nextIds.person,age:Number(form.age),weight:Number(form.weight),height:Number(form.height)}];
+      next.nextIds={...next.nextIds,person:next.nextIds.person+1};
+    } else {
+      next.persons=next.persons.map(p=>p.id===modal?{...form,id:modal,age:Number(form.age),weight:Number(form.weight),height:Number(form.height)}:p);
+    }
+    setData(next);setModal(null);showToast(modal==='add'?'Persona aggiunta!':'Persona aggiornata!');
+  }
+
+  function del(id){
+    if(!confirm('Eliminare questa persona e tutte le sue schede?')) return;
+    const next={...data};
+    next.persons=next.persons.filter(p=>p.id!==id);
+    next.plans=next.plans.filter(p=>p.personId!==id);
+    next.assignments=next.assignments.filter(a=>a.personId!==id);
+    next.completed=next.completed.filter(c=>c.personId!==id);
+    setData(next);showToast('Persona eliminata','error');
+  }
+
+  const F=({k,lbl,type='text',opts})=><FormField label={lbl}>
+    {opts
+      ? <select value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}>{opts.map(o=><option key={o}>{o}</option>)}</select>
+      : <input type={type} value={form[k]||''} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} placeholder={lbl}/>
+    }
+  </FormField>;
+
+  return <div className="slide-up">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24,flexWrap:'wrap',gap:12}}>
+      <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:700}}>Persone</h2>
+      <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+        <div className="search-wrap" style={{minWidth:220}}>
+          <svg className="search-icon" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input className="search-input" placeholder="Cerca persona..." value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+        <button className="btn btn-primary" onClick={openAdd}>
+          <SvgIcon d={ICONS.plus} size={16}/>Aggiungi
+        </button>
+      </div>
+    </div>
+    <div className="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Persona</th><th>Età</th><th>Peso</th><th>Altezza</th><th>Obiettivo</th><th>Contatti</th><th>Schede</th><th></th>
+        </tr></thead>
+        <tbody>
+          {filtered.map(p=>(
+            <tr key={p.id}>
+              <td>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{width:34,height:34,borderRadius:'50%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center',color:'#60a5fa',fontSize:12,fontWeight:700,flexShrink:0}}>
+                    {p.name[0]}{p.surname[0]}
+                  </div>
+                  <div>
+                    <div style={{color:'#f1f5f9',fontWeight:500}}>{p.name} {p.surname}</div>
+                    <div style={{color:'#6b7280',fontSize:12}}>{p.email}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{p.age} anni</td>
+              <td>{p.weight} kg</td>
+              <td>{p.height} cm</td>
+              <td><span className="badge badge-purple">{p.goal}</span></td>
+              <td style={{color:'#6b7280',fontSize:13}}>{p.phone}</td>
+              <td><span className="badge badge-blue">{data.plans.filter(pl=>pl.personId===p.id).length}</span></td>
+              <td>
+                <div style={{display:'flex',gap:6}}>
+                  <button className="btn-icon" onClick={()=>openEdit(p)} title="Modifica">
+                    <SvgIcon d={ICONS.edit} size={15}/>
+                  </button>
+                  <button className="btn-icon" onClick={()=>del(p.id)} title="Elimina"
+                    style={{color:'#ef4444',borderColor:'#7f1d1d'}}>
+                    <SvgIcon d={ICONS.trash} size={15}/>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+          {filtered.length===0&&<tr><td colSpan={8} style={{textAlign:'center',color:'#6b7280',padding:32}}>Nessuna persona trovata</td></tr>}
+        </tbody>
+      </table>
+    </div>
+    {modal&&<Modal title={modal==='add'?'Nuova Persona':'Modifica Persona'} onClose={()=>setModal(null)}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 16px'}}>
+        <F k="name" lbl="Nome"/><F k="surname" lbl="Cognome"/>
+        <F k="age" lbl="Età" type="number"/><F k="weight" lbl="Peso (kg)" type="number"/>
+        <F k="height" lbl="Altezza (cm)" type="number"/>
+        <F k="goal" lbl="Obiettivo" opts={GOALS}/>
+      </div>
+      <F k="email" lbl="Email" type="email"/>
+      <F k="phone" lbl="Telefono"/>
+      <div style={{display:'flex',gap:10,marginTop:8}}>
+        <button className="btn btn-ghost" style={{flex:1}} onClick={()=>setModal(null)}>Annulla</button>
+        <button className="btn btn-primary" style={{flex:1}} onClick={save}>Salva</button>
+      </div>
+    </Modal>}
+  </div>;
+}
+
+// ─── ADMIN PLANS ─────────────────────────────────────────────
+function AdminPlans({data,setData,showToast}){
+  const [modal,setModal]=useState(null);
+  const [dayModal,setDayModal]=useState(null);
+  const [form,setForm]=useState({personId:'',name:'',startDate:'',endDate:'',notes:''});
+  const [selectedPlan,setSelectedPlan]=useState(null);
+  const [selectedDay,setSelectedDay]=useState(1);
+  const [addExModal,setAddExModal]=useState(false);
+  const [exSearch,setExSearch]=useState('');
+
+  function openAdd(){
+    setForm({personId:data.persons[0]?.id||'',name:'',startDate:'',endDate:'',notes:''});
+    setModal('add');
+  }
+  function openEdit(p){setForm({...p,personId:String(p.personId)});setModal(p.id);}
+
+  function save(){
+    if(!form.name||!form.personId){showToast('Dati obbligatori mancanti','error');return;}
+    const next={...data};
+    if(modal==='add'){
+      next.plans=[...next.plans,{...form,id:next.nextIds.plan,personId:Number(form.personId)}];
+      next.nextIds={...next.nextIds,plan:next.nextIds.plan+1};
+    } else {
+      next.plans=next.plans.map(p=>p.id===modal?{...form,id:modal,personId:Number(form.personId)}:p);
+    }
+    setData(next);setModal(null);showToast('Scheda salvata!');
+  }
+
+  function del(id){
+    if(!confirm('Eliminare questa scheda?')) return;
+    const next={...data};
+    next.plans=next.plans.filter(p=>p.id!==id);
+    next.assignments=next.assignments.filter(a=>a.planId!==id);
+    setData(next);showToast('Scheda eliminata','error');
+  }
+
+  function addExercise(exId){
+    if(data.assignments.some(a=>a.planId===selectedPlan.id&&a.day===selectedDay&&a.exerciseId===exId)){
+      showToast('Esercizio già presente in questo giorno','error');return;
+    }
+    const next={...data};
+    next.assignments=[...next.assignments,{id:next.nextIds.assignment,personId:selectedPlan.personId,planId:selectedPlan.id,day:selectedDay,exerciseId:exId}];
+    next.nextIds={...next.nextIds,assignment:next.nextIds.assignment+1};
+    setData(next);showToast('Esercizio aggiunto!');
+  }
+
+  function removeEx(assignId){
+    const next={...data};
+    next.assignments=next.assignments.filter(a=>a.id!==assignId);
+    setData(next);showToast('Esercizio rimosso','error');
+  }
+
+  const getPlanDays=(plan)=>{
+    const days=[...new Set(data.assignments.filter(a=>a.planId===plan.id).map(a=>a.day))].sort((a,b)=>a-b);
+    return days;
+  };
+
+  const getDayExercises=(planId,day)=>{
+    return data.assignments.filter(a=>a.planId===planId&&a.day===day)
+      .map(a=>({...a,exercise:data.exercises.find(e=>e.id===a.exerciseId)}))
+      .filter(a=>a.exercise);
+  };
+
+  const availableExercises=data.exercises.filter(ex=>{
+    const notAdded=!data.assignments.some(a=>a.planId===selectedPlan?.id&&a.day===selectedDay&&a.exerciseId===ex.id);
+    const matchSearch=ex.name.toLowerCase().includes(exSearch.toLowerCase());
+    return notAdded&&matchSearch;
+  });
+
+  function addDay(){
+    const days=getPlanDays(selectedPlan);
+    const nextDay=days.length>0?Math.max(...days)+1:1;
+    setSelectedDay(nextDay);
+    setAddExModal(true);
+    setExSearch('');
+  }
+
+  const F=({k,lbl,type='text'})=><FormField label={lbl}>
+    {k==='personId'
+      ? <select value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}>
+          {data.persons.map(p=><option key={p.id} value={p.id}>{p.name} {p.surname}</option>)}
+        </select>
+      : <input type={type} value={form[k]||''} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} placeholder={lbl}/>
+    }
+  </FormField>;
+
+  return <div className="slide-up">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24,flexWrap:'wrap',gap:12}}>
+      <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:700}}>
+        {selectedPlan?<span style={{cursor:'pointer',color:'#3b82f6'}} onClick={()=>setSelectedPlan(null)}>← Schede</span>:'Schede Allenamento'}
+        {selectedPlan&&` / ${selectedPlan.name}`}
+      </h2>
+      {!selectedPlan&&<button className="btn btn-primary" onClick={openAdd}>
+        <SvgIcon d={ICONS.plus} size={16}/>Nuova Scheda
+      </button>}
+    </div>
+
+    {!selectedPlan ? <>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:16}}>
+        {data.plans.map(plan=>{
+          const person=data.persons.find(p=>p.id===plan.personId);
+          const days=getPlanDays(plan);
+          return <div key={plan.id} className="card" style={{cursor:'default'}}>
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,marginBottom:4}}>{plan.name}</div>
+                {person&&<span className="badge badge-blue">{person.name} {person.surname}</span>}
+              </div>
+              <div style={{display:'flex',gap:6}}>
+                <button className="btn-icon" onClick={()=>openEdit(plan)}><SvgIcon d={ICONS.edit} size={14}/></button>
+                <button className="btn-icon" onClick={()=>del(plan.id)} style={{color:'#ef4444',borderColor:'#7f1d1d'}}><SvgIcon d={ICONS.trash} size={14}/></button>
+              </div>
+            </div>
+            <div style={{color:'#9ca3af',fontSize:13,marginBottom:12}}>{plan.notes}</div>
+            <div style={{color:'#6b7280',fontSize:12,marginBottom:16}}>
+              {plan.startDate} → {plan.endDate}
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:12}}>
+              {days.map(d=>(
+                <span key={d} className="badge badge-green" style={{fontSize:11}}>
+                  Giorno {d}: {getDayExercises(plan.id,d).length} es.
+                </span>
+              ))}
+              {days.length===0&&<span style={{color:'#6b7280',fontSize:13}}>Nessun giorno configurato</span>}
+            </div>
+            <button className="btn btn-ghost" style={{width:'100%',justifyContent:'center'}} onClick={()=>setSelectedPlan(plan)}>
+              Gestisci Esercizi →
+            </button>
+          </div>;
+        })}
+      </div>
+    </> : <>
+      <div style={{display:'flex',gap:10,marginBottom:20,flexWrap:'wrap'}}>
+        {getPlanDays(selectedPlan).map(d=>(
+          <button key={d}
+            className={`btn ${selectedDay===d?'btn-primary':'btn-ghost'}`}
+            onClick={()=>setSelectedDay(d)}>
+            Giorno {d} · {DAY_NAMES[d]||''}
+          </button>
+        ))}
+        <button className="btn btn-ghost" style={{borderStyle:'dashed'}} onClick={addDay}>
+          <SvgIcon d={ICONS.plus} size={16}/>Nuovo Giorno
+        </button>
+      </div>
+      {getPlanDays(selectedPlan).includes(selectedDay) && <>
+        <div style={{marginBottom:12,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <h3 style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700}}>
+            Giorno {selectedDay} - {DAY_NAMES[selectedDay]||''}
+          </h3>
+          <button className="btn btn-primary btn-sm" onClick={()=>{setAddExModal(true);setExSearch('');}}>
+            <SvgIcon d={ICONS.plus} size={14}/>Aggiungi Esercizio
+          </button>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {getDayExercises(selectedPlan.id,selectedDay).map(a=>{
+            const mg=data.muscleGroups.find(g=>g.id===a.exercise?.mgId);
+            return <div key={a.id} className="card" style={{display:'flex',alignItems:'center',gap:16,padding:'14px 20px'}}>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                  {mg&&<span className={`badge ${MG_COLORS[mg.id]||'badge-blue'}`} style={{fontSize:11}}>{mg.name}</span>}
+                  <span style={{color:'#f1f5f9',fontWeight:500}}>{a.exercise.name}</span>
+                </div>
+                <div style={{color:'#6b7280',fontSize:13}}>
+                  {a.exercise.sets} serie × {a.exercise.reps} rip · {a.exercise.rest}s recupero
+                </div>
+              </div>
+              <button className="btn-icon" onClick={()=>removeEx(a.id)} style={{color:'#ef4444',borderColor:'#7f1d1d'}}>
+                <SvgIcon d={ICONS.trash} size={14}/>
+              </button>
+            </div>;
+          })}
+          {getDayExercises(selectedPlan.id,selectedDay).length===0&&
+            <div style={{textAlign:'center',color:'#6b7280',padding:40,background:'#111827',borderRadius:12,border:'1px dashed #1f2937'}}>
+              Nessun esercizio in questo giorno.<br/>
+              <button className="btn btn-primary btn-sm" style={{marginTop:12}} onClick={()=>{setAddExModal(true);setExSearch('');}}>
+                + Aggiungi esercizi
+              </button>
+            </div>
+          }
+        </div>
+      </>}
+    </>}
+
+    {modal&&<Modal title={modal==='add'?'Nuova Scheda':'Modifica Scheda'} onClose={()=>setModal(null)}>
+      <F k="personId" lbl="Persona"/>
+      <F k="name" lbl="Nome Scheda"/>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 16px'}}>
+        <F k="startDate" lbl="Data Inizio" type="date"/>
+        <F k="endDate" lbl="Data Fine" type="date"/>
+      </div>
+      <FormField label="Note"><textarea value={form.notes||''} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Note..." rows={2} style={{resize:'vertical'}}/></FormField>
+      <div style={{display:'flex',gap:10,marginTop:8}}>
+        <button className="btn btn-ghost" style={{flex:1}} onClick={()=>setModal(null)}>Annulla</button>
+        <button className="btn btn-primary" style={{flex:1}} onClick={save}>Salva</button>
+      </div>
+    </Modal>}
+
+    {addExModal&&<Modal title="Aggiungi Esercizio" onClose={()=>setAddExModal(false)} wide>
+      <div className="search-wrap" style={{marginBottom:16}}>
+        <svg className="search-icon" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input className="search-input" placeholder="Cerca esercizio..." value={exSearch} onChange={e=>setExSearch(e.target.value)} autoFocus/>
+      </div>
+      <div style={{maxHeight:360,overflow:'auto',display:'flex',flexDirection:'column',gap:8}}>
+        {data.muscleGroups.map(mg=>{
+          const exs=availableExercises.filter(e=>e.mgId===mg.id);
+          if(exs.length===0) return null;
+          return <div key={mg.id}>
+            <div style={{color:'#6b7280',fontSize:12,fontWeight:500,letterSpacing:'0.06em',textTransform:'uppercase',margin:'12px 0 6px'}}>{mg.name}</div>
+            {exs.map(ex=>(
+              <div key={ex.id} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'#1f2937',borderRadius:8,marginBottom:6,cursor:'pointer',transition:'background .15s'}}
+                onClick={()=>addExercise(ex.id)}
+                onMouseEnter={e=>e.currentTarget.style.background='#283548'}
+                onMouseLeave={e=>e.currentTarget.style.background='#1f2937'}>
+                <div style={{flex:1}}>
+                  <div style={{color:'#f1f5f9',fontWeight:500,fontSize:14}}>{ex.name}</div>
+                  <div style={{color:'#6b7280',fontSize:12,marginTop:2}}>{ex.sets}×{ex.reps} · {ex.rest}s</div>
+                </div>
+                <svg width="18" height="18" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><path d={ICONS.plus}/></svg>
+              </div>
+            ))}
+          </div>;
+        })}
+        {availableExercises.length===0&&<p style={{textAlign:'center',color:'#6b7280',padding:24}}>Nessun esercizio disponibile</p>}
+      </div>
+    </Modal>}
+  </div>;
+}
+
+// ─── ADMIN EXERCISES ─────────────────────────────────────────
+function AdminExercises({data,setData,showToast}){
+  const [modal,setModal]=useState(null);
+  const [search,setSearch]=useState('');
+  const [mgFilter,setMgFilter]=useState('all');
+  const [form,setForm]=useState({mgId:'1',name:'',sets:'3',reps:'10',rest:'60',notes:''});
+
+  const filtered=data.exercises.filter(e=>{
+    const matchSearch=e.name.toLowerCase().includes(search.toLowerCase());
+    const matchMg=mgFilter==='all'||e.mgId===Number(mgFilter);
+    return matchSearch&&matchMg;
+  });
+
+  function openAdd(){setForm({mgId:'1',name:'',sets:'3',reps:'10',rest:'60',notes:''});setModal('add');}
+  function openEdit(ex){setForm({...ex,mgId:String(ex.mgId),sets:String(ex.sets),rest:String(ex.rest)});setModal(ex.id);}
+
+  function save(){
+    if(!form.name){showToast('Nome obbligatorio','error');return;}
+    const next={...data};
+    const ex={...form,mgId:Number(form.mgId),sets:Number(form.sets),rest:Number(form.rest)};
+    if(modal==='add'){
+      next.exercises=[...next.exercises,{...ex,id:next.nextIds.exercise}];
+      next.nextIds={...next.nextIds,exercise:next.nextIds.exercise+1};
+    } else {
+      next.exercises=next.exercises.map(e=>e.id===modal?{...ex,id:modal}:e);
+    }
+    setData(next);setModal(null);showToast('Esercizio salvato!');
+  }
+
+  function del(id){
+    if(!confirm('Eliminare questo esercizio?')) return;
+    const next={...data};
+    next.exercises=next.exercises.filter(e=>e.id!==id);
+    next.assignments=next.assignments.filter(a=>a.exerciseId!==id);
+    setData(next);showToast('Esercizio eliminato','error');
+  }
+
+  return <div className="slide-up">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24,flexWrap:'wrap',gap:12}}>
+      <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:700}}>Esercizi</h2>
+      <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+        <div className="search-wrap" style={{minWidth:200}}>
+          <svg className="search-icon" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input className="search-input" placeholder="Cerca..." value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+        <select value={mgFilter} onChange={e=>setMgFilter(e.target.value)} style={{width:'auto',padding:'9px 12px'}}>
+          <option value="all">Tutti i gruppi</option>
+          {data.muscleGroups.map(mg=><option key={mg.id} value={mg.id}>{mg.name}</option>)}
+        </select>
+        <button className="btn btn-primary" onClick={openAdd}><SvgIcon d={ICONS.plus} size={16}/>Aggiungi</button>
+      </div>
+    </div>
+    <div className="table-wrap">
+      <table>
+        <thead><tr><th>Esercizio</th><th>Gruppo</th><th>Serie</th><th>Ripetizioni</th><th>Recupero</th><th>Note</th><th></th></tr></thead>
+        <tbody>
+          {filtered.map(ex=>{
+            const mg=data.muscleGroups.find(g=>g.id===ex.mgId);
+            return <tr key={ex.id}>
+              <td style={{fontWeight:500,color:'#f1f5f9'}}>{ex.name}</td>
+              <td>{mg&&<span className={`badge ${MG_COLORS[mg.id]||'badge-blue'}`}>{mg.name}</span>}</td>
+              <td style={{fontFamily:'Barlow Condensed',fontSize:18,fontWeight:700}}>{ex.sets}</td>
+              <td style={{fontFamily:'Barlow Condensed',fontSize:18,fontWeight:700}}>{ex.reps}</td>
+              <td><span className="badge badge-amber">{ex.rest}s</span></td>
+              <td style={{color:'#6b7280',maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ex.notes||'—'}</td>
+              <td>
+                <div style={{display:'flex',gap:6}}>
+                  <button className="btn-icon" onClick={()=>openEdit(ex)}><SvgIcon d={ICONS.edit} size={15}/></button>
+                  <button className="btn-icon" onClick={()=>del(ex.id)} style={{color:'#ef4444',borderColor:'#7f1d1d'}}><SvgIcon d={ICONS.trash} size={15}/></button>
+                </div>
+              </td>
+            </tr>;
+          })}
+          {filtered.length===0&&<tr><td colSpan={7} style={{textAlign:'center',color:'#6b7280',padding:32}}>Nessun esercizio trovato</td></tr>}
+        </tbody>
+      </table>
+    </div>
+    {modal&&<Modal title={modal==='add'?'Nuovo Esercizio':'Modifica Esercizio'} onClose={()=>setModal(null)}>
+      <FormField label="Gruppo Muscolare">
+        <select value={form.mgId} onChange={e=>setForm(f=>({...f,mgId:e.target.value}))}>
+          {data.muscleGroups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+        </select>
+      </FormField>
+      <FormField label="Nome Esercizio"><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="es. Panca Piana"/></FormField>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0 12px'}}>
+        <FormField label="Serie"><input type="number" value={form.sets} onChange={e=>setForm(f=>({...f,sets:e.target.value}))} min="1"/></FormField>
+        <FormField label="Ripetizioni"><input value={form.reps} onChange={e=>setForm(f=>({...f,reps:e.target.value}))} placeholder="es. 8-12"/></FormField>
+        <FormField label="Recupero (s)"><input type="number" value={form.rest} onChange={e=>setForm(f=>({...f,rest:e.target.value}))} min="0"/></FormField>
+      </div>
+      <FormField label="Note"><textarea value={form.notes||''} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={2} style={{resize:'vertical'}}/></FormField>
+      <div style={{display:'flex',gap:10,marginTop:8}}>
+        <button className="btn btn-ghost" style={{flex:1}} onClick={()=>setModal(null)}>Annulla</button>
+        <button className="btn btn-primary" style={{flex:1}} onClick={save}>Salva</button>
+      </div>
+    </Modal>}
+  </div>;
+}
+
+// ─── ADMIN IMPORT/EXPORT ─────────────────────────────────────
+function AdminImportExport({data,setData,showToast}){
+  const [importing,setImporting]=useState(false);
+  const fileRef=useRef(null);
+
+  function exportExcel(){
+    const wb=XLSX.utils.book_new();
+    // Persone
+    const personeData=[['ID_Persona','Nome','Cognome','Eta','Peso_KG','Altezza_CM','Obiettivo','Telefono','Email'],
+      ...data.persons.map(p=>[p.id,p.name,p.surname,p.age,p.weight,p.height,p.goal,p.phone,p.email])];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(personeData),'Persone');
+    // Schede
+    const schedeData=[['ID_Scheda','ID_Persona','Nome_Scheda','Data_Inizio','Data_Fine','Note'],
+      ...data.plans.map(p=>[p.id,p.personId,p.name,p.startDate,p.endDate,p.notes])];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(schedeData),'Schede_Allenamento');
+    // Gruppi
+    const gruppiData=[['ID_Gruppo','Nome_Gruppo'],...data.muscleGroups.map(g=>[g.id,g.name])];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gruppiData),'Gruppi_Muscolari');
+    // Esercizi
+    const esData=[['ID_Esercizio','ID_Gruppo','Nome_Esercizio','Serie','Ripetizioni','Recupero_Secondi','Note'],
+      ...data.exercises.map(e=>[e.id,e.mgId,e.name,e.sets,e.reps,e.rest,e.notes])];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(esData),'Esercizi');
+    // Allenamenti
+    const allData=[['ID_Allenamento','ID_Persona','ID_Scheda','Giorno','ID_Esercizio'],
+      ...data.assignments.map(a=>[a.id,a.personId,a.planId,a.day,a.exerciseId])];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(allData),'Allenamenti_Persona');
+    XLSX.writeFile(wb,'database_scheda_allenamento.xlsx');
+    showToast('Export completato! File scaricato.');
+  }
+
+  function importExcel(e){
+    const file=e.target.files[0];
+    if(!file) return;
+    setImporting(true);
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const wb=XLSX.read(ev.target.result,{type:'binary'});
+        const next={...data};
+        let imported={persons:0,exercises:0,plans:0,assignments:0,groups:0};
+
+        // Gruppi Muscolari
+        if(wb.SheetNames.includes('Gruppi_Muscolari')){
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets['Gruppi_Muscolari']);
+          rows.forEach(r=>{
+            const exists=next.muscleGroups.find(g=>g.id===r.ID_Gruppo||g.name===r.Nome_Gruppo);
+            if(!exists&&r.ID_Gruppo&&r.Nome_Gruppo){
+              next.muscleGroups=[...next.muscleGroups,{id:r.ID_Gruppo,name:r.Nome_Gruppo}];
+              imported.groups++;
+            }
+          });
+        }
+        // Persone
+        if(wb.SheetNames.includes('Persone')){
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets['Persone']);
+          rows.forEach(r=>{
+            const exists=next.persons.find(p=>p.id===r.ID_Persona||p.email===r.Email);
+            if(!exists&&r.Nome){
+              const newId=Math.max(...next.persons.map(p=>p.id),0)+1;
+              next.persons=[...next.persons,{id:newId,name:r.Nome||'',surname:r.Cognome||'',age:Number(r.Eta)||0,weight:Number(r.Peso_KG)||0,height:Number(r.Altezza_CM)||0,goal:r.Obiettivo||'',phone:r.Telefono||'',email:r.Email||''}];
+              next.nextIds={...next.nextIds,person:Math.max(next.nextIds.person,newId+1)};
+              imported.persons++;
+            }
+          });
+        }
+        // Esercizi
+        if(wb.SheetNames.includes('Esercizi')){
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets['Esercizi']);
+          rows.forEach(r=>{
+            const exists=next.exercises.find(e=>e.name===r.Nome_Esercizio&&e.mgId===r.ID_Gruppo);
+            if(!exists&&r.Nome_Esercizio){
+              const newId=Math.max(...next.exercises.map(e=>e.id),0)+1;
+              next.exercises=[...next.exercises,{id:newId,mgId:Number(r.ID_Gruppo)||1,name:r.Nome_Esercizio,sets:Number(r.Serie)||3,reps:String(r.Ripetizioni||10),rest:Number(r.Recupero_Secondi)||60,notes:r.Note||''}];
+              next.nextIds={...next.nextIds,exercise:Math.max(next.nextIds.exercise,newId+1)};
+              imported.exercises++;
+            }
+          });
+        }
+        // Schede
+        if(wb.SheetNames.includes('Schede_Allenamento')){
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets['Schede_Allenamento']);
+          rows.forEach(r=>{
+            const exists=next.plans.find(p=>p.name===r.Nome_Scheda);
+            if(!exists&&r.Nome_Scheda){
+              const newId=Math.max(...next.plans.map(p=>p.id),0)+1;
+              next.plans=[...next.plans,{id:newId,personId:Number(r.ID_Persona)||next.persons[0]?.id,name:r.Nome_Scheda,startDate:r.Data_Inizio||'',endDate:r.Data_Fine||'',notes:r.Note||''}];
+              next.nextIds={...next.nextIds,plan:Math.max(next.nextIds.plan,newId+1)};
+              imported.plans++;
+            }
+          });
+        }
+        // Allenamenti
+        if(wb.SheetNames.includes('Allenamenti_Persona')){
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets['Allenamenti_Persona']);
+          rows.forEach(r=>{
+            const exists=next.assignments.find(a=>a.personId===r.ID_Persona&&a.planId===r.ID_Scheda&&a.day===r.Giorno&&a.exerciseId===r.ID_Esercizio);
+            if(!exists&&r.ID_Esercizio){
+              const newId=Math.max(...next.assignments.map(a=>a.id),0)+1;
+              next.assignments=[...next.assignments,{id:newId,personId:Number(r.ID_Persona),planId:Number(r.ID_Scheda),day:Number(r.Giorno),exerciseId:Number(r.ID_Esercizio)}];
+              next.nextIds={...next.nextIds,assignment:Math.max(next.nextIds.assignment,newId+1)};
+              imported.assignments++;
+            }
+          });
+        }
+        setData(next);
+        setImporting(false);
+        const total=Object.values(imported).reduce((a,b)=>a+b,0);
+        showToast(`Import completato! ${total} nuovi record aggiunti.`);
+      }catch(err){
+        setImporting(false);
+        showToast('Errore nel file Excel: '+err.message,'error');
+      }
+      e.target.value='';
+    };
+    reader.readAsBinaryString(file);
+  }
+
+  function resetData(){
+    if(!confirm('Resetare tutti i dati ai valori predefiniti? Questa azione non può essere annullata!')) return;
+    setData(SEED);
+    showToast('Dati resettati ai valori predefiniti');
+  }
+
+  const actions=[
+    {title:'Esporta in Excel',desc:'Scarica tutti i dati in formato Excel compatibile con il file originale',color:'#22c55e',icon:ICONS.download,action:exportExcel,btn:'Esporta Excel',btnClass:'btn-success'},
+    {title:'Importa da Excel',desc:'Carica un file Excel per aggiornare il database. I duplicati vengono ignorati automaticamente.',color:'#3b82f6',icon:ICONS.upload,action:()=>fileRef.current?.click(),btn:importing?'Importazione...':'Importa Excel',btnClass:'btn-primary'},
+    {title:'Reset Database',desc:'Ripristina tutti i dati ai valori predefiniti (utenti demo e esercizi di esempio)',color:'#ef4444',icon:ICONS.trash,action:resetData,btn:'Reset',btnClass:'btn-danger'},
+  ];
+
+  return <div className="slide-up">
+    <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:700,marginBottom:8}}>Import / Export</h2>
+    <p style={{color:'#6b7280',marginBottom:28}}>Gestisci i dati del database tramite file Excel.</p>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:28}}>
+      {actions.map(a=>(
+        <div key={a.title} className="card">
+          <div style={{width:44,height:44,borderRadius:10,background:`${a.color}22`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
+            <svg width="22" height="22" fill="none" stroke={a.color} strokeWidth="2" viewBox="0 0 24 24"><path d={a.icon}/></svg>
+          </div>
+          <h3 style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,marginBottom:6}}>{a.title}</h3>
+          <p style={{color:'#9ca3af',fontSize:14,marginBottom:20,lineHeight:1.5}}>{a.desc}</p>
+          <button className={`btn ${a.btnClass}`} style={{width:'100%',justifyContent:'center'}} onClick={a.action} disabled={importing}>
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d={a.icon}/></svg>
+            {a.btn}
+          </button>
+        </div>
+      ))}
+    </div>
+    <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{display:'none'}} onChange={importExcel}/>
+    <div className="card">
+      <h3 style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,marginBottom:12}}>Struttura del Database</h3>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:10}}>
+        {[
+          {label:'Persone',count:data.persons.length,color:'#3b82f6'},
+          {label:'Schede',count:data.plans.length,color:'#8b5cf6'},
+          {label:'Gruppi Muscolari',count:data.muscleGroups.length,color:'#f59e0b'},
+          {label:'Esercizi',count:data.exercises.length,color:'#22c55e'},
+          {label:'Assegnazioni',count:data.assignments.length,color:'#ec4899'},
+          {label:'Completati',count:data.completed.length,color:'#14b8a6'},
+        ].map(s=>(
+          <div key={s.label} style={{background:'#1f2937',borderRadius:8,padding:'12px 16px',borderLeft:`3px solid ${s.color}`}}>
+            <div style={{color:'#6b7280',fontSize:12,marginBottom:4}}>{s.label}</div>
+            <div style={{fontFamily:'Barlow Condensed',fontSize:28,fontWeight:700,color:'#f1f5f9'}}>{s.count}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── ADMIN PANEL ─────────────────────────────────────────────
+function AdminPanel({data,setData,showToast,onLogout}){
+  const [section,setSection]=useState('overview');
+  const [mobileNav,setMobileNav]=useState(false);
+
+  const navItems=[
+    {id:'overview',label:'Dashboard',icon:ICONS.home},
+    {id:'persons',label:'Persone',icon:ICONS.users},
+    {id:'plans',label:'Schede',icon:ICONS.calendar},
+    {id:'exercises',label:'Esercizi',icon:ICONS.dumbbell},
+    {id:'import',label:'Import/Export',icon:ICONS.excel},
+  ];
+
+  const sectionProps={data,setData,showToast};
+
+  return <div style={{display:'flex',minHeight:'100vh'}}>
+    <aside className="sidebar">
+      <div style={{padding:'20px 16px 16px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:24}}>
+          <div style={{background:'#3b82f6',borderRadius:8,padding:'6px',display:'flex'}}>
+            <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d={ICONS.dumbbell}/></svg>
+          </div>
+          <div>
+            <div style={{fontFamily:'Barlow Condensed',fontSize:18,fontWeight:700,color:'#f1f5f9',lineHeight:1}}>FitTracker</div>
+            <div style={{fontSize:11,color:'#6b7280',fontWeight:500}}>ADMIN PANEL</div>
+          </div>
+        </div>
+        {navItems.map(n=>(
+          <div key={n.id} className={`sidebar-link ${section===n.id?'active':''}`} onClick={()=>setSection(n.id)}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d={n.icon}/></svg>
+            {n.label}
+          </div>
+        ))}
+      </div>
+      <div style={{marginTop:'auto',padding:'16px'}}>
+        <button className="btn btn-ghost" style={{width:'100%',justifyContent:'center'}} onClick={onLogout}>
+          <SvgIcon d={ICONS.logout} size={16}/>Esci
+        </button>
+      </div>
+    </aside>
+    <main style={{flex:1,padding:'28px 24px',minWidth:0,background:'#0a0a0f'}}>
+      {section==='overview'&&<AdminOverview {...sectionProps}/>}
+      {section==='persons'&&<AdminPersons {...sectionProps}/>}
+      {section==='plans'&&<AdminPlans {...sectionProps}/>}
+      {section==='exercises'&&<AdminExercises {...sectionProps}/>}
+      {section==='import'&&<AdminImportExport {...sectionProps}/>}
+    </main>
+    {/* Mobile Bottom Nav */}
+    <div className="bottom-nav">
+      {navItems.map(n=>(
+        <div key={n.id} className={`bottom-nav-item ${section===n.id?'active':''}`} onClick={()=>setSection(n.id)}>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d={n.icon}/></svg>
+          <span>{n.label.split('/')[0]}</span>
+        </div>
+      ))}
+      <div className="bottom-nav-item" onClick={onLogout}>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d={ICONS.logout}/></svg>
+        <span>Esci</span>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── USER WORKOUT DAY ────────────────────────────────────────
+function UserWorkoutDay({plan,day,data,setData,showToast,onBack}){
+  const [timer,setTimer]=useState(null);
+  const [completed,setCompleted]=useState(new Set());
+  const todayKey=`${plan.id}-${day}-${new Date().toDateString()}`;
+
+  const assignments=data.assignments
+    .filter(a=>a.planId===plan.id&&a.day===day)
+    .map(a=>({...a,exercise:data.exercises.find(e=>e.id===a.exerciseId)}))
+    .filter(a=>a.exercise);
+
+  const mg=useMemo(()=>{
+    const ids=[...new Set(assignments.map(a=>a.exercise.mgId))];
+    return ids.map(id=>data.muscleGroups.find(g=>g.id===id)).filter(Boolean);
+  },[assignments]);
+
+  function toggleDone(id){
+    setCompleted(s=>{
+      const n=new Set(s);
+      n.has(id)?n.delete(id):n.add(id);
+      return n;
+    });
+  }
+
+  function finishWorkout(){
+    const next={...data};
+    next.completed=[...next.completed,{
+      id:Date.now(),personId:plan.personId,planId:plan.id,day,
+      date:new Date().toISOString(),exerciseCount:assignments.length,
+      completedCount:completed.size
+    }];
+    setData(next);
+    showToast(`💪 Allenamento completato! ${completed.size}/${assignments.length} esercizi`);
+    onBack();
+  }
+
+  const pct=assignments.length>0?Math.round((completed.size/assignments.length)*100):0;
+
+  return <div className="slide-up" style={{maxWidth:680,margin:'0 auto'}}>
+    <button className="btn btn-ghost btn-sm" style={{marginBottom:16}} onClick={onBack}>
+      ← Indietro
+    </button>
+    <div style={{marginBottom:20}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <div>
+          <h2 style={{fontFamily:'Barlow Condensed',fontSize:36,fontWeight:800,marginBottom:4}}>
+            Giorno {day} · {DAY_NAMES[day]||''}
+          </h2>
+          <p style={{color:'#9ca3af',fontSize:14}}>{plan.name}</p>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <div style={{fontFamily:'Barlow Condensed',fontSize:40,fontWeight:800,color:pct===100?'#22c55e':'#3b82f6',lineHeight:1}}>{pct}%</div>
+          <div style={{color:'#6b7280',fontSize:12}}>{completed.size}/{assignments.length} completati</div>
+        </div>
+      </div>
+      <div style={{background:'#1f2937',borderRadius:8,height:6,marginTop:16,overflow:'hidden'}}>
+        <div style={{width:`${pct}%`,height:'100%',background:pct===100?'#22c55e':'#3b82f6',borderRadius:8,transition:'width .4s ease'}}/>
+      </div>
+    </div>
+    {mg.length>0&&<div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
+      {mg.map(g=><span key={g.id} className={`badge ${MG_COLORS[g.id]||'badge-blue'}`}>{g.name}</span>)}
+    </div>}
+    <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
+      {assignments.map(a=>{
+        const done=completed.has(a.id);
+        const exMg=data.muscleGroups.find(g=>g.id===a.exercise.mgId);
+        return <div key={a.id} className={`exercise-card ${done?'done':''}`} onClick={()=>toggleDone(a.id)}>
+          <div style={{display:'flex',alignItems:'flex-start',gap:16}}>
+            <div style={{width:28,height:28,borderRadius:'50%',border:`2px solid ${done?'#22c55e':'#374151'}`,background:done?'#22c55e':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s',marginTop:2}}>
+              {done&&<svg width="14" height="14" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6,flexWrap:'wrap'}}>
+                {exMg&&<span className={`badge ${MG_COLORS[exMg.id]||'badge-blue'}`} style={{fontSize:11}}>{exMg.name}</span>}
+                <span style={{color:done?'#4ade80':'#f1f5f9',fontWeight:600,fontSize:16,textDecoration:done?'line-through':'none'}}>{a.exercise.name}</span>
+              </div>
+              <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
+                <div style={{textAlign:'center'}}>
+                  <div style={{fontFamily:'Barlow Condensed',fontSize:28,fontWeight:700,color:'#f1f5f9',lineHeight:1}}>{a.exercise.sets}</div>
+                  <div style={{color:'#6b7280',fontSize:11,textTransform:'uppercase',letterSpacing:'0.06em'}}>Serie</div>
+                </div>
+                <div style={{textAlign:'center'}}>
+                  <div style={{fontFamily:'Barlow Condensed',fontSize:28,fontWeight:700,color:'#f1f5f9',lineHeight:1}}>{a.exercise.reps}</div>
+                  <div style={{color:'#6b7280',fontSize:11,textTransform:'uppercase',letterSpacing:'0.06em'}}>Rip.</div>
+                </div>
+                {a.exercise.rest>0&&<div style={{textAlign:'center'}}>
+                  <div style={{fontFamily:'Barlow Condensed',fontSize:28,fontWeight:700,color:'#f59e0b',lineHeight:1}}>{a.exercise.rest}s</div>
+                  <div style={{color:'#6b7280',fontSize:11,textTransform:'uppercase',letterSpacing:'0.06em'}}>Recupero</div>
+                </div>}
+              </div>
+              {a.exercise.notes&&<div style={{marginTop:8,color:'#6b7280',fontSize:13,fontStyle:'italic'}}>💡 {a.exercise.notes}</div>}
+              {a.exercise.rest>0&&<button
+                className="btn btn-ghost btn-sm"
+                style={{marginTop:10,fontSize:12}}
+                onClick={e=>{e.stopPropagation();setTimer(a.exercise.rest);}}>
+                <SvgIcon d={ICONS.timer} size={14}/>Avvia Timer {a.exercise.rest}s
+              </button>}
+            </div>
+          </div>
+        </div>;
+      })}
+    </div>
+    {assignments.length>0&&<button
+      className={`btn ${pct===100?'btn-success':'btn-primary'}`}
+      style={{width:'100%',justifyContent:'center',padding:'16px',fontSize:16}}
+      onClick={finishWorkout}>
+      {pct===100?'🏆 Completa Allenamento!':'💪 Termina Sessione'}
+    </button>}
+    {timer&&<RestTimer seconds={timer} onClose={()=>setTimer(null)}/>}
+  </div>;
+}
+
+// ─── USER PANEL ──────────────────────────────────────────────
+function UserPanel({person,data,setData,showToast,onLogout}){
+  const [section,setSection]=useState('home');
+  const [selectedPlan,setSelectedPlan]=useState(null);
+  const [selectedDay,setSelectedDay]=useState(null);
+
+  const myPlans=data.plans.filter(p=>p.personId===person.id);
+  const myCompleted=data.completed.filter(c=>c.personId===person.id);
+
+  function openWorkout(plan,day){setSelectedPlan(plan);setSelectedDay(day);setSection('workout');}
+  function backFromWorkout(){setSelectedPlan(null);setSelectedDay(null);setSection('home');}
+
+  const navItems=[
+    {id:'home',label:'Home',icon:ICONS.home},
+    {id:'history',label:'Storico',icon:ICONS.chart},
+    {id:'profile',label:'Profilo',icon:ICONS.users},
+  ];
+
+  if(section==='workout'&&selectedPlan&&selectedDay!==null){
+    return <div style={{padding:'20px 16px 80px',maxWidth:680,margin:'0 auto'}}>
+      <UserWorkoutDay plan={selectedPlan} day={selectedDay} data={data} setData={setData} showToast={showToast} onBack={backFromWorkout}/>
+    </div>;
+  }
+
+  return <div style={{paddingBottom:80}}>
+    <header style={{background:'#111827',borderBottom:'1px solid #1f2937',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{width:38,height:38,borderRadius:'50%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center',color:'#60a5fa',fontFamily:'Barlow Condensed',fontSize:16,fontWeight:700}}>
+          {person.name[0]}{person.surname[0]}
+        </div>
+        <div>
+          <div style={{color:'#f1f5f9',fontWeight:600,fontSize:15}}>{person.name} {person.surname}</div>
+          <div style={{color:'#6b7280',fontSize:12}}>{person.goal}</div>
+        </div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <div style={{background:'#1f2937',borderRadius:8,padding:'4px 10px',display:'flex',alignItems:'center',gap:6}}>
+          <svg width="14" height="14" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24"><path d={ICONS.check}/></svg>
+          <span style={{color:'#4ade80',fontSize:13,fontWeight:500}}>{myCompleted.length}</span>
+          <span style={{color:'#6b7280',fontSize:12}}>sessioni</span>
+        </div>
+        <button className="btn-icon" onClick={onLogout} title="Esci">
+          <SvgIcon d={ICONS.logout} size={16}/>
+        </button>
+      </div>
+    </header>
+    <main style={{padding:'20px 16px',maxWidth:680,margin:'0 auto'}}>
+      {section==='home'&&<div className="slide-up">
+        <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:800,marginBottom:6}}>Le Mie Schede</h2>
+        <p style={{color:'#6b7280',fontSize:14,marginBottom:20}}>Seleziona una scheda e il giorno di allenamento</p>
+        {myPlans.length===0
+          ? <div style={{textAlign:'center',padding:60,color:'#6b7280'}}>
+              <div style={{fontSize:48,marginBottom:12}}>🏋️</div>
+              <p>Nessuna scheda assegnata.<br/>Contatta il tuo trainer.</p>
+            </div>
+          : myPlans.map(plan=>{
+              const days=[...new Set(data.assignments.filter(a=>a.planId===plan.id).map(a=>a.day))].sort((a,b)=>a-b);
+              return <div key={plan.id} className="card" style={{marginBottom:16}}>
+                <div style={{marginBottom:16}}>
+                  <h3 style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700,marginBottom:4}}>{plan.name}</h3>
+                  <div style={{color:'#6b7280',fontSize:13}}>
+                    {plan.startDate&&plan.endDate&&`${plan.startDate} → ${plan.endDate}`}
+                    {plan.notes&&` · ${plan.notes}`}
+                  </div>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {days.map(d=>{
+                    const exs=data.assignments.filter(a=>a.planId===plan.id&&a.day===d);
+                    const exMgs=[...new Set(exs.map(a=>{const ex=data.exercises.find(e=>e.id===a.exerciseId);return ex?.mgId;}).filter(Boolean))];
+                    return <div key={d}
+                      style={{background:'#1f2937',borderRadius:10,padding:'14px 16px',cursor:'pointer',transition:'all .2s',border:'1px solid transparent'}}
+                      onClick={()=>openWorkout(plan,d)}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.background='#1a2942'}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor='transparent';e.currentTarget.style.background='#1f2937'}}>
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                        <div>
+                          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                            <span style={{fontFamily:'Barlow Condensed',fontSize:18,fontWeight:700,color:'#f1f5f9'}}>Giorno {d}</span>
+                            <span style={{color:'#9ca3af',fontSize:14}}>{DAY_NAMES[d]||''}</span>
+                          </div>
+                          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                            {exMgs.slice(0,3).map(mgId=>{
+                              const mg=data.muscleGroups.find(g=>g.id===mgId);
+                              return mg&&<span key={mgId} className={`badge ${MG_COLORS[mgId]||'badge-blue'}`} style={{fontSize:11}}>{mg.name}</span>;
+                            })}
+                          </div>
+                        </div>
+                        <div style={{textAlign:'right',flexShrink:0}}>
+                          <div style={{fontFamily:'Barlow Condensed',fontSize:24,fontWeight:700,color:'#3b82f6'}}>{exs.length}</div>
+                          <div style={{color:'#6b7280',fontSize:11}}>esercizi</div>
+                        </div>
+                      </div>
+                    </div>;
+                  })}
+                  {days.length===0&&<p style={{color:'#6b7280',fontSize:14,textAlign:'center',padding:16}}>Nessun giorno configurato</p>}
+                </div>
+              </div>;
+            })
+        }
+      </div>}
+
+      {section==='history'&&<div className="slide-up">
+        <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:800,marginBottom:20}}>Storico Allenamenti</h2>
+        {myCompleted.length===0
+          ? <div style={{textAlign:'center',padding:60,color:'#6b7280'}}>
+              <div style={{fontSize:48,marginBottom:12}}>📊</div>
+              <p>Nessun allenamento completato ancora.<br/>Inizia oggi!</p>
+            </div>
+          : <>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
+                {[
+                  {label:'Sessioni Totali',value:myCompleted.length,color:'#3b82f6'},
+                  {label:'Questa Settimana',value:myCompleted.filter(c=>new Date(c.date)>new Date(Date.now()-7*864e5)).length,color:'#22c55e'},
+                ].map(s=>(
+                  <div key={s.label} className="stat-card">
+                    <div style={{color:'#6b7280',fontSize:13,marginBottom:4}}>{s.label}</div>
+                    <div style={{fontFamily:'Barlow Condensed',fontSize:36,fontWeight:700,color:s.color}}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              {[...myCompleted].reverse().slice(0,20).map(c=>{
+                const plan=data.plans.find(p=>p.id===c.planId);
+                const date=new Date(c.date);
+                return <div key={c.id} className="card" style={{marginBottom:10,padding:'14px 16px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:12}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:'rgba(34,197,94,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <svg width="20" height="20" fill="none" stroke="#22c55e" strokeWidth="2" viewBox="0 0 24 24"><path d={ICONS.check}/></svg>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{color:'#f1f5f9',fontWeight:500,fontSize:14}}>{plan?.name||'Scheda'} · Giorno {c.day}</div>
+                      <div style={{color:'#6b7280',fontSize:12,marginTop:2}}>
+                        {date.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} · {c.completedCount}/{c.exerciseCount} esercizi
+                      </div>
+                    </div>
+                    <span className="badge badge-green" style={{fontSize:11}}>✓ Completato</span>
+                  </div>
+                </div>;
+              })}
+            </>
+        }
+      </div>}
+
+      {section==='profile'&&<div className="slide-up">
+        <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:800,marginBottom:20}}>Il Mio Profilo</h2>
+        <div className="card" style={{marginBottom:16}}>
+          <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:20}}>
+            <div style={{width:64,height:64,borderRadius:'50%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center',color:'#60a5fa',fontFamily:'Barlow Condensed',fontSize:28,fontWeight:700}}>
+              {person.name[0]}{person.surname[0]}
+            </div>
+            <div>
+              <div style={{fontFamily:'Barlow Condensed',fontSize:28,fontWeight:700,color:'#f1f5f9'}}>{person.name} {person.surname}</div>
+              <span className="badge badge-purple">{person.goal}</span>
+            </div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+            {[
+              {label:'Peso',value:`${person.weight} kg`},
+              {label:'Altezza',value:`${person.height} cm`},
+              {label:'Età',value:`${person.age} anni`},
+            ].map(s=>(
+              <div key={s.label} style={{background:'#1f2937',borderRadius:8,padding:'12px 14px',textAlign:'center'}}>
+                <div style={{color:'#6b7280',fontSize:12,marginBottom:4}}>{s.label}</div>
+                <div style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700,color:'#f1f5f9'}}>{s.value}</div>
+              </div>
+            ))}
+          </div>
+          {person.email&&<div style={{marginTop:12,color:'#6b7280',fontSize:13}}>📧 {person.email}</div>}
+          {person.phone&&<div style={{color:'#6b7280',fontSize:13}}>📞 {person.phone}</div>}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+          {[
+            {label:'Schede Assegnate',value:myPlans.length,icon:ICONS.calendar,color:'#8b5cf6'},
+            {label:'Allenamenti Totali',value:myCompleted.length,icon:ICONS.check,color:'#22c55e'},
+          ].map(s=>(
+            <div key={s.label} className="stat-card">
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <svg width="16" height="16" fill="none" stroke={s.color} strokeWidth="2" viewBox="0 0 24 24"><path d={s.icon}/></svg>
+                <span style={{color:'#6b7280',fontSize:13}}>{s.label}</span>
+              </div>
+              <div style={{fontFamily:'Barlow Condensed',fontSize:36,fontWeight:700,color:'#f1f5f9'}}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>}
+    </main>
+
+    <div className="bottom-nav">
+      {navItems.map(n=>(
+        <div key={n.id} className={`bottom-nav-item ${section===n.id?'active':''}`} onClick={()=>setSection(n.id)}>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d={n.icon}/></svg>
+          <span>{n.label}</span>
+        </div>
+      ))}
+    </div>
+
+    {/* Desktop top tabs */}
+    <div className="desktop-only" style={{position:'fixed',top:0,right:0,padding:'16px 24px',display:'flex',gap:8,background:'#0a0a0f'}}>
+      {navItems.map(n=>(
+        <button key={n.id} className={`btn btn-sm ${section===n.id?'btn-primary':'btn-ghost'}`} onClick={()=>setSection(n.id)}>
+          <SvgIcon d={n.icon} size={14}/>{n.label}
+        </button>
+      ))}
+    </div>
+  </div>;
+}
+
+// ─── MAIN APP ────────────────────────────────────────────────
+function App(){
+  const [view,setView]=useState('login');
+  const [currentUser,setCurrentUser]=useState(null);
+  const [data,setDataRaw]=useState(null);
+  const [toast,showToast]=useToast();
+
+  function setData(newData){
+    setDataRaw(newData);
+    db.save(newData);
+  }
+
+  useEffect(()=>{
+    const saved=db.load();
+    setDataRaw(saved||SEED);
+    if(!saved) db.save(SEED);
+  },[]);
+
+  if(!data) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',color:'#3b82f6'}}>
+    <div style={{textAlign:'center'}}>
+      <div style={{width:40,height:40,border:'3px solid #1f2937',borderTopColor:'#3b82f6',borderRadius:'50%',animation:'spin 0.8s linear infinite',margin:'0 auto 12px'}}/>
+      <div style={{color:'#6b7280',fontSize:14}}>Caricamento...</div>
+    </div>
+  </div>;
+
+  return <>
+    {view==='login'&&<LoginPage
+      persons={data.persons}
+      onUser={p=>{setCurrentUser(p);setView('user');}}
+      onAdmin={()=>setView('admin')}
+    />}
+    {view==='admin'&&<AdminPanel
+      data={data} setData={setData} showToast={showToast}
+      onLogout={()=>{setView('login');setCurrentUser(null);}}
+    />}
+    {view==='user'&&currentUser&&<UserPanel
+      person={currentUser} data={data} setData={setData} showToast={showToast}
+      onLogout={()=>{setView('login');setCurrentUser(null);}}
+    />}
+    <Toast toast={toast}/>
+  </>;
+}
+
+const root=ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>
